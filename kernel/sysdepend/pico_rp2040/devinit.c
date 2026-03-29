@@ -26,6 +26,13 @@
 #include <kernel.h>
 #include "sysdepend.h"
 
+#if DEVCNF_USE_USBHID
+#include "../../../device/include/dev_usb_hid.h"
+#endif
+#if DEVCNF_USE_W5100S
+#include "../../../device/include/dev_w5100s.h"
+#endif
+
 /* ------------------------------------------------------------------------ */
 
 /*
@@ -53,8 +60,11 @@ EXPORT ER knl_start_device( void )
 		if(err < E_OK) return err;
 	#endif
 
-	/* I2C unit.0 "iica" */
-	#if DEVCNF_USE_IIC
+	/* I2C unit.0 "iica" — master mode only.
+	 * When KB_IS_MASTER=0 (slave keyboard), I2C0 is used as slave
+	 * (initialized by keyboard framework, not here).
+	 * Both drivers cannot coexist on the same I2C0 peripheral. */
+	#if DEVCNF_USE_IIC && (!defined(KB_IS_MASTER) || KB_IS_MASTER)
 		err = dev_init_i2c(0);
 		if(err < E_OK) return err;
 	#endif
@@ -62,6 +72,18 @@ EXPORT ER knl_start_device( void )
 	/* UART0 "sera" */
 	#if DEVCNF_USE_SER
 		err = dev_init_ser(0);
+		if(err < E_OK) return err;
+	#endif
+
+	/* USB HID Keyboard "usbk" — master (USB-connected) side only */
+	#if DEVCNF_USE_USBHID && (!defined(KB_IS_MASTER) || KB_IS_MASTER)
+		err = dev_init_usb_hid(0);
+		if(err < E_OK) return err;
+	#endif
+
+	/* W5100S Ethernet "neta" */
+	#if DEVCNF_USE_W5100S
+		err = dev_init_w5100s(0);
 		if(err < E_OK) return err;
 	#endif
 

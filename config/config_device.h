@@ -25,8 +25,10 @@
  *	1: Use   0: Do not use
  */
 
-#define DEVCNF_USE_SER		1		// Serial communication device 
-#define DEVCNF_USE_ADC		1		// A/D conversion device
+#define DEVCNF_USE_SER		1		// Serial communication device
+#define DEVCNF_USE_ADC		0		// A/D conversion device (disabled for test)
 #define DEVCNF_USE_IIC		1		// I2C communication device
+#define DEVCNF_USE_USBHID	1		// USB HID Keyboard device
+#define DEVCNF_USE_W5100S	0		// W5100S Ethernet (W5100S-EVB-Pico)
 
 #endif	/* __DEV_CONFIG_H__ */

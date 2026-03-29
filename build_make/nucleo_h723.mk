@@ -32,3 +32,15 @@ include mtkernel_3/lib/libtk/sysdepend/cpu/core/armv7m/subdir.mk
 include mtkernel_3/kernel/sysdepend/nucleo_h723/subdir.mk
 include mtkernel_3/kernel/sysdepend/cpu/stm32h7/subdir.mk
 include mtkernel_3/kernel/sysdepend/cpu/core/armv7m/subdir.mk
+
+# ---- USB Device Driver ----
+include mtkernel_3/device/usb_hid/subdir.mk
+
+# ---- I2C Slave Driver ----
+include mtkernel_3/device/i2c_slave/subdir.mk
+
+# ---- BSP Library (GPIO) ----
+include mtkernel_3/lib/libbsp/sysdepend/nucleo_h723/subdir.mk
+
+# ---- Keyboard framework ----
+include mtkernel_3/app_program/keyboard/subdir.mk

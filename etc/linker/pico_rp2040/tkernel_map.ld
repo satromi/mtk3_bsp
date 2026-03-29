@@ -63,5 +63,6 @@ SECTIONS {
 		. = ALIGN(4);
 		__bss_end = .;
 		__end = .;
+		end = .;     /* Required by newlib _sbrk */
 	} >RAM
 }

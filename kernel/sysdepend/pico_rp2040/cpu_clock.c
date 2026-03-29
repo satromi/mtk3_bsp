@@ -93,7 +93,7 @@ EXPORT void startup_clock(ATR clkatr)
 
 	/* PLL settings */
 	init_pll(PLL_SYS_BASE, 1, 1500, 6, 2);	// PLL SYS 125MHz
-	init_pll(PLL_USB_BASE, 1, 480, 5, 2);	// PLL USB 48MHz
+	init_pll(PLL_USB_BASE, 1, 480, 5, 2);	// PLL USB 48MHz (VCO=480MHz, /5/2=48MHz)
 
 	/* CLK_REF settings */
 	div = (XOSC_MHz << 8) / XOSC_MHz;

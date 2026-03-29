@@ -50,6 +50,7 @@ LOCAL const T_SETUP_REG modclk_tbl[] = {
 
 #else			// Use the sample device driver
 	{RCC_AHB4ENR,		0x0000001F},	// GPIOA,B,C,D,E enable
+	{RCC_AHB1ENR,		0x02000000},	// USB OTG FS clock enable (bit25)
 	{RCC_APB1LENR,		0x0004000F},	// USART3, TIM2-TIM5 enable
 	{RCC_APB4ENR,		0x00000002},	// SYSCFG enable
 
@@ -92,11 +93,12 @@ LOCAL const T_SETUP_REG pinfnc_tbl[] = {
 
 #else			// Use the device sample driver
 
-	/* GPIOA Setting   PA3: Arduino A0 */
-	{GPIO_MODER(A),		0xABFFFFFF},	// GPIOA mode
+	/* GPIOA Setting   PA3: Arduino A0  PA11: USB_DM(AF10)  PA12: USB_DP(AF10) */
+	{GPIO_MODER(A),		0xAABFFFFF},	// GPIOA mode (PA11,PA12=AF)
 	{GPIO_OTYPER(A),	0x00000000},	// GPIOA output type
-	{GPIO_OSPEEDR(A),	0x0C000000},	// GPIOA output speed
-	{GPIO_PUPDR(A),		0x64000000},	// GPIOA Pull-up/down
+	{GPIO_OSPEEDR(A),	0x0FC00000},	// GPIOA output speed (PA11,PA12=VeryHigh)
+	{GPIO_PUPDR(A),		0x64000000},	// GPIOA Pull-up/down (PA11,PA12=NoPull)
+	{GPIO_AFRH(A),		0x000AA000},	// GPIOA AF high (PA11=AF10, PA12=AF10)
 
 	/* GPIOB Setting   PB0,PB14:LED  PB9:I2C1_SDA  PB8:I2C1_SCL */
 	{GPIO_MODER(B),		0xDFFAFEBD},	// GPIOB mode
@@ -145,13 +147,18 @@ EXPORT void knl_startup_hw(void)
 		while(*(_UW*)(p->addr) != p->data);	/* Delay after an RCC peripheral clock enabling */
 	}
 
-	/* Startup clock */
-	startup_clock(CLKATR_HSE | CLKATR_HSEBYP | CLKATR_PLL1);
+	/* Startup clock (HSI48 added for USB OTG FS 48MHz) */
+	startup_clock(CLKATR_HSE | CLKATR_HSEBYP | CLKATR_PLL1 | CLKATR_HSI48);
 
 	/* Setup Pin Function */
 	for(p = pinfnc_tbl; p->addr != 0; p++) {
 		*(_UW*)(p->addr) = p->data;
 	}
+
+#if USE_SDEV_DRV
+	/* USB OTG FS clock source = HSI48 (RCC_D2CCIP2R bits[21:20] = 11) */
+	*(_UW*)RCC_D2CCIP2R |= (0x03 << 20);
+#endif
 }
 
 #if USE_SHUTDOWN

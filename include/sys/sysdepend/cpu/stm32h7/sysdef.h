@@ -477,6 +477,179 @@
 
 /* ------------------------------------------------------------------------ */
 /*
+ * USB OTG HS (DWC2 core) with internal Full-Speed PHY — Device mode only
+ *   STM32H723 has USB1_OTG_HS only (no separate OTG_FS).
+ *   Using embedded FS PHY for Full-Speed device operation.
+ *   STM32H723 Reference Manual RM0468 Section 61
+ */
+
+#define USB_OTG_FS_BASE		0x40040000u	/* USB1_OTG_HS base (FS PHY) */
+
+/* Global registers */
+#define OTG_GOTGCTL		(USB_OTG_FS_BASE + 0x0000)
+#define OTG_GOTGINT		(USB_OTG_FS_BASE + 0x0004)
+#define OTG_GAHBCFG		(USB_OTG_FS_BASE + 0x0008)
+#define OTG_GUSBCFG		(USB_OTG_FS_BASE + 0x000C)
+#define OTG_GRSTCTL		(USB_OTG_FS_BASE + 0x0010)
+#define OTG_GINTSTS		(USB_OTG_FS_BASE + 0x0014)
+#define OTG_GINTMSK		(USB_OTG_FS_BASE + 0x0018)
+#define OTG_GRXSTSR		(USB_OTG_FS_BASE + 0x001C)
+#define OTG_GRXSTSP		(USB_OTG_FS_BASE + 0x0020)
+#define OTG_GRXFSIZ		(USB_OTG_FS_BASE + 0x0024)
+#define OTG_DIEPTXF0		(USB_OTG_FS_BASE + 0x0028)
+#define OTG_GCCFG		(USB_OTG_FS_BASE + 0x0038)
+#define OTG_CID			(USB_OTG_FS_BASE + 0x003C)
+#define OTG_GLPMCFG		(USB_OTG_FS_BASE + 0x0054)
+#define OTG_DIEPTXF(n)		(USB_OTG_FS_BASE + 0x0104 + ((n)-1)*4)  /* n=1..8 */
+
+/* Device-mode registers */
+#define OTG_DCFG		(USB_OTG_FS_BASE + 0x0800)
+#define OTG_DCTL		(USB_OTG_FS_BASE + 0x0804)
+#define OTG_DSTS		(USB_OTG_FS_BASE + 0x0808)
+#define OTG_DIEPMSK		(USB_OTG_FS_BASE + 0x0810)
+#define OTG_DOEPMSK		(USB_OTG_FS_BASE + 0x0814)
+#define OTG_DAINT		(USB_OTG_FS_BASE + 0x0818)
+#define OTG_DAINTMSK		(USB_OTG_FS_BASE + 0x081C)
+
+/* Device IN endpoint registers (n=0..8) */
+#define OTG_DIEPCTL(n)		(USB_OTG_FS_BASE + 0x0900 + (n)*0x20)
+#define OTG_DIEPINT(n)		(USB_OTG_FS_BASE + 0x0908 + (n)*0x20)
+#define OTG_DIEPTSIZ(n)		(USB_OTG_FS_BASE + 0x0910 + (n)*0x20)
+#define OTG_DTXFSTS(n)		(USB_OTG_FS_BASE + 0x0918 + (n)*0x20)
+
+/* Device OUT endpoint registers (n=0..8) */
+#define OTG_DOEPCTL(n)		(USB_OTG_FS_BASE + 0x0B00 + (n)*0x20)
+#define OTG_DOEPINT(n)		(USB_OTG_FS_BASE + 0x0B08 + (n)*0x20)
+#define OTG_DOEPTSIZ(n)		(USB_OTG_FS_BASE + 0x0B10 + (n)*0x20)
+
+/* Power and clock gating */
+#define OTG_PCGCCTL		(USB_OTG_FS_BASE + 0x0E00)
+
+/* FIFO access (one per EP) */
+#define OTG_FIFO(n)		(USB_OTG_FS_BASE + 0x1000 + (n)*0x1000)
+
+/* GAHBCFG bits */
+#define OTG_GAHBCFG_GINTMSK	(1u << 0)
+#define OTG_GAHBCFG_TXFELVL	(1u << 7)
+
+/* GUSBCFG bits */
+#define OTG_GUSBCFG_PHYSEL	(1u << 6)	/* Full-speed internal PHY */
+#define OTG_GUSBCFG_FDMOD	(1u << 30)	/* Force device mode */
+#define OTG_GUSBCFG_TRDT_MASK	(0xFu << 10)
+#define OTG_GUSBCFG_TRDT(n)	((UW)(n) << 10)
+
+/* GRSTCTL bits */
+#define OTG_GRSTCTL_CSRST	(1u << 0)	/* Core soft reset */
+#define OTG_GRSTCTL_AHBIDL	(1u << 31)	/* AHB master idle */
+#define OTG_GRSTCTL_TXFFLSH	(1u << 5)	/* TX FIFO flush */
+#define OTG_GRSTCTL_RXFFLSH	(1u << 4)	/* RX FIFO flush */
+#define OTG_GRSTCTL_TXFNUM(n)	((UW)(n) << 6)	/* TX FIFO number */
+
+/* GINTSTS / GINTMSK bits */
+#define OTG_GINTSTS_USBRST	(1u << 12)	/* USB reset */
+#define OTG_GINTSTS_ENUMDNE	(1u << 13)	/* Enumeration done */
+#define OTG_GINTSTS_RXFLVL	(1u << 4)	/* RX FIFO non-empty */
+#define OTG_GINTSTS_IEPINT	(1u << 18)	/* IN endpoint interrupt */
+#define OTG_GINTSTS_OEPINT	(1u << 19)	/* OUT endpoint interrupt */
+#define OTG_GINTSTS_WKUINT	(1u << 31)	/* Resume/wakeup */
+#define OTG_GINTSTS_USBSUSP	(1u << 11)	/* USB suspend */
+#define OTG_GINTSTS_SOF		(1u << 3)	/* Start of frame */
+#define OTG_GINTSTS_OTGINT	(1u << 2)	/* OTG interrupt */
+#define OTG_GINTSTS_MMIS	(1u << 1)	/* Mode mismatch */
+
+/* GRXSTSP bits (pop register) */
+#define OTG_GRXSTSP_EPNUM_MASK	0x0Fu
+#define OTG_GRXSTSP_BCNT_MASK	(0x7FFu << 4)
+#define OTG_GRXSTSP_BCNT_SHIFT	4
+#define OTG_GRXSTSP_PKTSTS_MASK (0xFu << 17)
+#define OTG_GRXSTSP_PKTSTS_SHIFT 17
+#define OTG_GRXSTSP_PKTSTS_OUT_DATA	2
+#define OTG_GRXSTSP_PKTSTS_OUT_CPLT	3
+#define OTG_GRXSTSP_PKTSTS_SETUP_CPLT	4
+#define OTG_GRXSTSP_PKTSTS_SETUP_DATA	6
+
+/* GCCFG bits */
+#define OTG_GCCFG_PWRDWN	(1u << 16)	/* Power down deactivated */
+#define OTG_GCCFG_VBDEN	(1u << 21)	/* VBUS detection enable */
+
+/* GOTGCTL bits (VBUS sensing override for device mode) */
+#define OTG_GOTGCTL_BVALOEN	(1u << 9)	/* B-session valid override enable */
+#define OTG_GOTGCTL_BVALOVAL	(1u << 10)	/* B-session valid override value */
+
+/* DCFG bits */
+#define OTG_DCFG_DSPD_MASK	0x03u
+#define OTG_DCFG_DSPD_FS	0x03u		/* Full-speed (internal PHY) */
+#define OTG_DCFG_DAD_MASK	(0x7Fu << 4)
+#define OTG_DCFG_DAD(addr)	((UW)(addr) << 4)
+
+/* DCTL bits */
+#define OTG_DCTL_SDIS		(1u << 1)	/* Soft disconnect */
+#define OTG_DCTL_RWUSIG		(1u << 0)	/* Remote wakeup signaling */
+
+/* DSTS bits */
+#define OTG_DSTS_ENUMSPD_MASK	(0x3u << 1)
+#define OTG_DSTS_ENUMSPD_FS	(0x3u << 1)	/* Full-speed */
+#define OTG_DSTS_SUSPSTS	(1u << 0)	/* Suspend status */
+
+/* DIEPCTLn / DOEPCTLn bits */
+#define OTG_DIEPCTL_EPENA	(1u << 31)
+#define OTG_DIEPCTL_EPDIS	(1u << 30)
+#define OTG_DIEPCTL_SNAK	(1u << 27)
+#define OTG_DIEPCTL_CNAK	(1u << 26)
+#define OTG_DIEPCTL_TXFNUM(n)	((UW)(n) << 22)
+#define OTG_DIEPCTL_STALL	(1u << 21)
+#define OTG_DIEPCTL_EPTYP(t)	((UW)(t) << 18)
+#define OTG_DIEPCTL_USBAEP	(1u << 15)
+#define OTG_DIEPCTL_MPSIZ_MASK	0x7FFu
+#define OTG_DIEPCTL_SD0PID	(1u << 28)	/* Set DATA0 PID */
+
+#define OTG_DOEPCTL_EPENA	(1u << 31)
+#define OTG_DOEPCTL_EPDIS	(1u << 30)
+#define OTG_DOEPCTL_SNAK	(1u << 27)
+#define OTG_DOEPCTL_CNAK	(1u << 26)
+#define OTG_DOEPCTL_STALL	(1u << 21)
+#define OTG_DOEPCTL_EPTYP(t)	((UW)(t) << 18)
+#define OTG_DOEPCTL_USBAEP	(1u << 15)
+#define OTG_DOEPCTL_MPSIZ_MASK	0x7FFu
+#define OTG_DOEPCTL_SD0PID	(1u << 28)
+
+/* DIEPINTn / DOEPINTn bits */
+#define OTG_DIEPINT_XFRC	(1u << 0)	/* Transfer completed */
+#define OTG_DIEPINT_TOC		(1u << 3)	/* Timeout condition */
+#define OTG_DIEPINT_TXFE	(1u << 7)	/* TX FIFO empty */
+
+#define OTG_DOEPINT_XFRC	(1u << 0)	/* Transfer completed */
+#define OTG_DOEPINT_STUP	(1u << 3)	/* SETUP phase done */
+#define OTG_DOEPINT_B2BSTUP	(1u << 6)	/* Back-to-back SETUP */
+
+/* DAINT / DAINTMSK bits */
+#define OTG_DAINTMSK_IEPM(n)	(1u << (n))		/* IN ep mask */
+#define OTG_DAINTMSK_OEPM(n)	(1u << (16+(n)))	/* OUT ep mask */
+
+/* DIEPTSIZn / DOEPTSIZn bits */
+#define OTG_DIEPTSIZ_XFRSIZ_MASK	0x7FFFFu
+#define OTG_DIEPTSIZ_PKTCNT_MASK	(0x3FFu << 19)
+#define OTG_DIEPTSIZ_PKTCNT(n)		((UW)(n) << 19)
+
+#define OTG_DOEPTSIZ_XFRSIZ_MASK	0x7FFFFu
+#define OTG_DOEPTSIZ_PKTCNT_MASK	(0x3FFu << 19)
+#define OTG_DOEPTSIZ_PKTCNT(n)		((UW)(n) << 19)
+#define OTG_DOEPTSIZ_STUPCNT(n)		((UW)(n) << 29)
+
+/* RCC bit for USB1 OTG HS */
+#define RCC_AHB1ENR_USB1OTGHSEN	(1u << 25)
+
+/* USB OTG HS IRQ number (STM32H723) */
+#define INTNO_OTG_HS		77
+#define INTPRI_OTG_HS		5		/* Mid priority */
+
+/* FIFO sizes (in 32-bit words) */
+#define USB_OTG_RX_FIFO_SZ	128		/* 512 bytes */
+#define USB_OTG_TX0_FIFO_SZ	32		/* 128 bytes (EP0 TX) */
+#define USB_OTG_TX1_FIFO_SZ	32		/* 128 bytes (EP1 TX) */
+
+/* ------------------------------------------------------------------------ */
+/*
  * Coprocessor
  */
 #define CPU_HAS_FPU		1

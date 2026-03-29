@@ -63,6 +63,13 @@
 #define Csym(sym) _##sym
 #endif
 
+/* Pico W は RP2040 ベース (CYW43439 BLE 追加) */
+#ifdef _PICO_W_
+#ifndef _PICO_RP2040_
+#define _PICO_RP2040_
+#endif
+#endif
+
 #ifdef _PICO_RP2040_
 #include "sysdepend/pico_rp2040/machine.h"
 #define Csym(sym) sym

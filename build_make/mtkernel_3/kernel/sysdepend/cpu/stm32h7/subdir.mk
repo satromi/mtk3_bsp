@@ -3,12 +3,10 @@
 ################################################################################
 
 OBJS += \
-./mtkernel_3/kernel/sysdepend/cpu/stm32h7/cpu_clock.o \
-./mtkernel_3/kernel/sysdepend/cpu/stm32h7/vector_tbl.o 
+./mtkernel_3/kernel/sysdepend/cpu/stm32h7/vector_tbl.o
 
 C_DEPS += \
-./mtkernel_3/kernel/sysdepend/cpu/stm32h7/cpu_clock.d \
-./mtkernel_3/kernel/sysdepend/cpu/stm32h7/vector_tbl.d 
+./mtkernel_3/kernel/sysdepend/cpu/stm32h7/vector_tbl.d
 
 mtkernel_3/kernel/sysdepend/cpu/stm32h7/%.o: ../kernel/sysdepend/cpu/stm32h7/%.c
 	@echo 'Building file: $<'

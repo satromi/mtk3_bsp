@@ -26,6 +26,7 @@
 
 #include <kernel.h>
 #include <tm/tmonitor.h>
+#include <config_device.h>
 
 #include "sysdepend.h"
 
@@ -52,7 +53,11 @@ LOCAL const UW module_tbl[] = {
 #if USE_SDEV_DRV	// Do not use sample device driver
 	RESETS_RESET_ADC,		/* A/DC */
 	RESETS_RESET_I2C0,		/* I2C0 */
+#if DEVCNF_USE_W5100S
+	RESETS_RESET_SPI0,		/* SPI0 (W5100S Ethernet) */
+#endif
 #endif /* USE_SDEV_DRV */
+
 	0
 };
 
@@ -60,9 +65,16 @@ LOCAL const UW module_tbl[] = {
  * Setup pin functions Tadle
  */
 LOCAL const T_SETUP_REG pinfnc_tbl[] = {
-	/* P25 : LED */
+	/*
+	 * P25 : LED (Pico RP2040 のみ)
+	 * Pico W では GP25 は CYW43 SPI CS に使用されるため、
+	 * SIO/GPIO モードに設定してはならない。
+	 * Pico W の LED は CYW43 ワイヤレス GPIO 0 経由で制御する。
+	 */
+#ifndef _PICO_W_
 	{GPIO_CTRL(25),	GPIO_CTRL_FUNCSEL_SIO},		/* P25 GPIO */
 	{GPIO_OE, (1<<25)},				/* P25 output enable */
+#endif
 	/* P0,P1 : UART0 */
 	{GPIO_CTRL(0),	GPIO_CTRL_FUNCSEL_UART},	/* P0 UART0-TX */
 	{GPIO_CTRL(1),	GPIO_CTRL_FUNCSEL_UART},	/* P1 UART0-RX */
@@ -88,6 +100,25 @@ LOCAL const T_SETUP_REG pinfnc_tbl[] = {
 	{GPIO_CTRL(9),	GPIO_CTRL_FUNCSEL_I2C},
 	{GPIO(9), GPIO_IE | GPIO_DRIVE_4MA | GPIO_PUE | GPIO_SHEMITT},	/* Pull-up */
 
+#if DEVCNF_USE_W5100S
+	/* W5100S-EVB-Pico SPI0 pins */
+	{GPIO_CTRL(16),	GPIO_CTRL_FUNCSEL_SPI},		/* GP16 SPI0_RX (MISO) */
+	{GPIO(16), GPIO_IE | GPIO_DRIVE_4MA | GPIO_SHEMITT},
+	{GPIO_CTRL(18),	GPIO_CTRL_FUNCSEL_SPI},		/* GP18 SPI0_SCK */
+	{GPIO(18), GPIO_DRIVE_4MA | GPIO_SHEMITT},
+	{GPIO_CTRL(19),	GPIO_CTRL_FUNCSEL_SPI},		/* GP19 SPI0_TX (MOSI) */
+	{GPIO(19), GPIO_DRIVE_4MA | GPIO_SHEMITT},
+	/* GP17 CS: GPIO output (SW 制御) */
+	{GPIO_CTRL(17),	GPIO_CTRL_FUNCSEL_SIO},
+	{GPIO(17), GPIO_DRIVE_4MA | GPIO_SHEMITT},
+	/* GP20 RST: GPIO output */
+	{GPIO_CTRL(20),	GPIO_CTRL_FUNCSEL_SIO},
+	{GPIO(20), GPIO_DRIVE_4MA | GPIO_SHEMITT},
+	/* GP21 INT: GPIO input */
+	{GPIO_CTRL(21),	GPIO_CTRL_FUNCSEL_SIO},
+	{GPIO(21), GPIO_IE | GPIO_PUE | GPIO_SHEMITT},
+#endif
+
 #endif /* USE_SDEV_DRV */
 	{0, 0}
 };
@@ -112,6 +143,12 @@ EXPORT void knl_startup_hw(void)
 	for(p = pinfnc_tbl; p->addr != 0; p++) {
 		out_w(p->addr, p->data);
 	}
+
+#if USE_SDEV_DRV && DEVCNF_USE_W5100S
+	/* W5100S: GP17(CS) and GP20(RST) output enable, start HIGH */
+	set_w(GPIO_OUT, (1<<17) | (1<<20));
+	set_w(GPIO_OE, (1<<17) | (1<<20));
+#endif
 }
 
 #if USE_SHUTDOWN

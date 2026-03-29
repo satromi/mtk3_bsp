@@ -195,6 +195,44 @@
 #define	GPIO_SHEMITT		(1<<1)
 #define	GPIO_SLEWDAST		(1<<0)
 
+/* SPI (PrimeCell SSP: PL022) */
+#define SPI0_BASE		0x4003C000
+#define SPI1_BASE		0x40040000
+
+/* SPI register offsets (RP2040 Datasheet Section 4.4) */
+#define SSPCR0			0x00	/* Control register 0 */
+#define SSPCR1			0x04	/* Control register 1 */
+#define SSPDR			0x08	/* Data register */
+#define SSPSR			0x0C	/* Status register */
+#define SSPCPSR			0x10	/* Clock prescale register */
+#define SSPIMSC			0x14	/* Interrupt mask set/clear */
+#define SSPRIS			0x18	/* Raw interrupt status */
+#define SSPMIS			0x1C	/* Masked interrupt status */
+#define SSPICR			0x20	/* Interrupt clear register */
+#define SSPDMACR		0x24	/* DMA control register */
+
+/* SSPCR0 bits */
+#define SSPCR0_SCR_SHIFT	8	/* Serial clock rate (divider-1) */
+#define SSPCR0_SPH		(1<<7)	/* SSPCLKOUT phase */
+#define SSPCR0_SPO		(1<<6)	/* SSPCLKOUT polarity */
+#define SSPCR0_FRF_SPI		(0<<4)	/* Frame format: Motorola SPI */
+#define SSPCR0_DSS_8BIT		(0x07)	/* Data size: 8-bit */
+
+/* SSPCR1 bits */
+#define SSPCR1_SSE		(1<<1)	/* SSP enable */
+#define SSPCR1_MS_SLAVE		(1<<2)	/* Slave mode */
+
+/* SSPSR bits */
+#define SSPSR_TFE		(1<<0)	/* TX FIFO empty */
+#define SSPSR_TNF		(1<<1)	/* TX FIFO not full */
+#define SSPSR_RNE		(1<<2)	/* RX FIFO not empty */
+#define SSPSR_RFF		(1<<3)	/* RX FIFO full */
+#define SSPSR_BSY		(1<<4)	/* SSP busy */
+
+/* SPI IRQ numbers */
+#define INTNO_SPI0		18
+#define INTNO_SPI1		19
+
 /* Crystal Oscillator(XOSC) */
 #define XOSC_BASE               0x40024000
 #define XOSC_CTRL               (XOSC_BASE+0x00)

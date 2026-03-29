@@ -24,7 +24,12 @@
 #include <tk/device.h>
 
 #include <kernel.h>
+#include <config_device.h>
 #include "sysdepend.h"
+
+#if DEVCNF_USE_USBHID
+#include "../../../device/include/dev_usb_hid.h"
+#endif
 
 /* ------------------------------------------------------------------------ */
 
@@ -62,6 +67,12 @@ EXPORT ER knl_start_device( void )
 	/* Serial ch.2 "serc" */
 	#if DEVCNF_USE_SER
 		err = dev_init_ser(2);
+		if(err < E_OK) return err;
+	#endif
+
+	/* USB HID Keyboard "usbk" */
+	#if DEVCNF_USE_USBHID
+		err = dev_init_usb_hid(0);
 		if(err < E_OK) return err;
 	#endif
 

@@ -118,6 +118,9 @@ LOCAL void i2c_inthdr( UINT intno )
 			*(p_cb->rbuf)++ = in_w(I2C_DATA_CMD(unit)) & I2C_DATA_CMD_DAT;
 			if(--(p_cb->rdat_num)) {
 				cmd = I2C_DATA_CMD_CMD_READ;
+				if(p_cb->rdat_num == 1) {
+					cmd |= I2C_DATA_CMD_STOP;	// STOP on last read
+				}
 				out_w(I2C_DATA_CMD(unit), cmd);
 			} else {	// Last data
 				clr_w(I2C_INTR_MASK(unit), I2C_INT_RX_FULL);
@@ -140,7 +143,7 @@ LOCAL void i2c_inthdr( UINT intno )
 		wup = TRUE;
 	}
 
-	out_w(I2C_CLR_INTR(unit), 0);	// Clear all Interrupt Registers
+	in_w(I2C_CLR_INTR(unit));	// Clear all Interrupt Registers (read-to-clear)
 	ClearInt(intno);		// Clear interrupt
 
 	if(wup) {
@@ -164,7 +167,7 @@ LOCAL ER i2c_trans(INT unit, T_I2C_LLDCB *p_cb)
 	out_w(I2C_TAR(unit), p_cb->sadr & I2C_TAR_7BIT_ADR);	// Set slave address
 	out_w(I2C_INTR_MASK(unit), 0);				// Mask all innterrupts
 	out_w(I2C_ENABLE(unit), I2C_ENABLE_ENABLE);		// Enable I2C
-	out_w(I2C_CLR_INTR(unit), 0);				// Clear all Interrupt Registers
+	in_w(I2C_CLR_INTR(unit));				// Clear all Interrupt Registers (read-to-clear)
 	in_w(I2C_CLR_TX_ABRT(unit));				// Clear Transmit abort
 
 	while (p_cb->state != I2C_STS_STOP) {

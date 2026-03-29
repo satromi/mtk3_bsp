@@ -38,18 +38,18 @@
 
 #define	CNF_MAX_TSKPRI		32	/* Task Max priority */
 
-#define CNF_TIMER_PERIOD	10	/* System timer period */
+#define CNF_TIMER_PERIOD	1	/* System timer period */
 
 /* Maximum number of kernel objects */
 #define CNF_MAX_TSKID		32	/* Task */
 #define CNF_MAX_SEMID		16	/* Semaphore */
-#define CNF_MAX_FLGID		16	/* Event flag */
+#define CNF_MAX_FLGID		24	/* Event flag (W5100S+BLE+KB で 14+ 使用) */
 #define CNF_MAX_MBXID		4	/* Mailbox*/
 #define CNF_MAX_MTXID		4	/* Mutex */
 #define CNF_MAX_MBFID		4	/* Message buffer */
 #define CNF_MAX_MPLID		4	/* Memory pool */
 #define CNF_MAX_MPFID		4	/* Fixed size memory pool */
-#define CNF_MAX_CYCID		4	/* Cyclic handler */
+#define CNF_MAX_CYCID		8	/* Cyclic handler (KB scan + DHCP + MQTT 等) */
 #define CNF_MAX_ALMID		4	/* Alarm handler */
 
 /* Device configuration */
